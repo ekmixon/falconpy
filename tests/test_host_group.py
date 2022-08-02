@@ -21,41 +21,52 @@ AllowedResponses = [200, 429]  # Adding rate-limiting as an allowed response for
 class TestHostGroup:
 
     def serviceHostGroup_queryHostGroups(self):
-        if falcon.queryHostGroups(parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryHostGroups(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     def serviceHostGroup_queryGroupMembers(self):
-        if falcon.queryGroupMembers(
-                parameters={"limit": 1, "id": falcon.queryHostGroups(parameters={"limit": 1})["body"]["resources"][0]}
-                )["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryGroupMembers(
+                parameters={
+                    "limit": 1,
+                    "id": falcon.queryHostGroups(parameters={"limit": 1})["body"][
+                        "resources"
+                    ][0],
+                }
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def serviceHostGroup_getHostGroups(self):
-        if falcon.getHostGroups(
-                ids=falcon.queryHostGroups(parameters={"limit": 1})["body"]["resources"][0]
-                )["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.getHostGroups(
+                ids=falcon.queryHostGroups(parameters={"limit": 1})["body"][
+                    "resources"
+                ][0]
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def serviceHostGroup_queryCombinedHostGroups(self):
-        if falcon.queryCombinedHostGroups(parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryCombinedHostGroups(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     def serviceHostGroup_queryCombinedGroupMembers(self):
-        if falcon.queryCombinedGroupMembers(
-            parameters={"limit": 1,
-                        "id": falcon.queryCombinedHostGroups(parameters={"limit": 1})["body"]["resources"][0]["id"]
-                        })["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryCombinedGroupMembers(
+                parameters={
+                    "limit": 1,
+                    "id": falcon.queryCombinedHostGroups(parameters={"limit": 1})[
+                        "body"
+                    ]["resources"][0]["id"],
+                }
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def serviceHostGroup_GenerateErrors(self):
         falcon.base_url = "nowhere"
@@ -74,7 +85,7 @@ class TestHostGroup:
             ["queryHostGroups", ""]
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

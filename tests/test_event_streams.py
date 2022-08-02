@@ -30,9 +30,12 @@ class TestEventStreams:
     @staticmethod
     def stream_list():
         """list_available_streams"""
-        return bool(falcon.listAvailableStreamsOAuth2(
-                parameters={"appId": f"{APP_ID}"}
-                )["status_code"] in AllowedResponses)
+        return (
+            falcon.listAvailableStreamsOAuth2(parameters={"appId": f"{APP_ID}"})[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     @staticmethod
     def stream_refresh():
@@ -40,17 +43,18 @@ class TestEventStreams:
         avail = falcon.listAvailableStreamsOAuth2(parameters={"appId": f"{APP_ID}"})
         current_time = datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S +0000')
         headers = {
-            'Authorization': 'Token %s' % (
-                avail["body"]["resources"][0]["sessionToken"]["token"]
-                ), 'Date': current_time, 'Connection': 'Keep-Alive'
-            }
+            'Authorization': f'Token {avail["body"]["resources"][0]["sessionToken"]["token"]}',
+            'Date': current_time,
+            'Connection': 'Keep-Alive',
+        }
+
         stream = requests.get(avail["body"]["resources"][0]["dataFeedURL"], headers=headers, stream=True)
         with stream:
             result = falcon.refreshActiveStreamSession(appId=f"{APP_ID}",
                                                        action_name="refresh_active_stream_session",
                                                        partition="0"
                                                        )
-            return bool(result["status_code"] in AllowedResponses)
+            return result["status_code"] in AllowedResponses
 
     @staticmethod
     def stream_errors():

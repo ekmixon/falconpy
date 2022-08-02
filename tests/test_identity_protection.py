@@ -25,14 +25,7 @@ class TestIdentityProtection:
         result = falcon.GraphQL(body=payload)
         if not isinstance(result, dict):
             result = json.loads(result.decode())
-        if "extensions" in result:
-            if result["extensions"]["remainingPoints"] > 0:
-                return True
-            else:
-                return False
-        else:
-            # Prolly failed login, check yer API key
-            return False
+        return "extensions" in result and result["extensions"]["remainingPoints"] > 0
 
     def test_GraphQL(self):
         assert self.serviceIDP_GraphQL() is True

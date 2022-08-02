@@ -75,28 +75,26 @@ class APIHarness:
         self.token_expiration = 0
         self.token_time = time.time()
         self.authenticated = False
-        self.headers = lambda: {'Authorization': 'Bearer {}'.format(self.token)} if self.token else {}
+        self.headers = (
+            lambda: {'Authorization': f'Bearer {self.token}'} if self.token else {}
+        )
+
         self.commands = api_endpoints
 
     def valid_cred_format(self: object) -> bool:
         """Returns a boolean indicating if the client_id and client_secret are present in the creds dictionary."""
-        retval = False
-        if "client_id" in self.creds and "client_secret" in self.creds:
-            retval = True
-
-        return retval
+        return "client_id" in self.creds and "client_secret" in self.creds
 
     def token_expired(self: object) -> bool:
         """Returns a boolean based upon the token expiration status."""
-        retval = False
-        if (time.time() - self.token_time) >= (self.token_expiration - self.TOKEN_RENEW_WINDOW):
-            retval = True
-
-        return retval
+        return (
+            time.time() - self.token_time
+            >= self.token_expiration - self.TOKEN_RENEW_WINDOW
+        )
 
     def authenticate(self: object) -> bool:
         """ Generates an authorization token. """
-        target = self.base_url+'/oauth2/token'
+        target = f'{self.base_url}/oauth2/token'
         data_payload = {}
         if self.valid_cred_format():
             data_payload = {
@@ -126,22 +124,29 @@ class APIHarness:
 
     def deauthenticate(self: object) -> bool:
         """ Revokes the specified authorization token. """
-        target = str(self.base_url)+'/oauth2/revoke'
+        target = f'{str(self.base_url)}/oauth2/revoke'
         header_payload = {'Authorization': 'basic {}'.format(generate_b64cred(self.creds["client_id"],
                                                                               self.creds["client_secret"]
                                                                               ))}
-        data_payload = {'token': '{}'.format(self.token)}
+        data_payload = {'token': f'{self.token}'}
         revoked = False
-        if perform_request(method="POST", endpoint=target, data=data_payload,
-                           headers=header_payload, verify=self.ssl_verify, proxy=self.proxy, timeout=self.timeout
-                           )["status_code"] == 200:
-            self.authenticated = False
-            self.token = False
-            revoked = True
-        else:
-            revoked = False
+        if (
+            perform_request(
+                method="POST",
+                endpoint=target,
+                data=data_payload,
+                headers=header_payload,
+                verify=self.ssl_verify,
+                proxy=self.proxy,
+                timeout=self.timeout,
+            )["status_code"]
+            != 200
+        ):
+            return False
 
-        return revoked
+        self.authenticated = False
+        self.token = False
+        return True
 
     def _create_header_payload(self: object, passed_arguments: dict) -> dict:
         """Creates the HTTP header payload based upon the existing class headers and passed arguments."""
@@ -183,9 +188,8 @@ class APIHarness:
         except IndexError:
             pass  # They didn't specify an action, use the default and try for an override instead
         uber_command = [a for a in self.commands if a[0] == kwargs["action"]]
-        if "override" in kwargs:
-            if kwargs["override"]:
-                uber_command = [["Manual"] + kwargs["override"].split(",")]
+        if "override" in kwargs and kwargs["override"]:
+            uber_command = [["Manual"] + kwargs["override"].split(",")]
         if uber_command:
             # Calculate our target endpoint based upon arguments passed to the function
             target = calc_url_from_args(f"{self.base_url}{uber_command[0][2]}", kwargs)

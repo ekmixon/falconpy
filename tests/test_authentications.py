@@ -23,18 +23,12 @@ class TestAuthentications:
         bad_falcon = FalconZTA(creds={"client_id": "This", "client_secret": "WontWork"})
         result = bad_falcon.getAssessmentV1(ids='12345678')
 
-        if result["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return result["status_code"] in AllowedResponses
 
     def serviceAny_TestBadCredRevoke(self):
         bad_falcon = FalconAuth.OAuth2()
         result = bad_falcon.revoke("Will generate a 403")
-        if result["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return result["status_code"] in AllowedResponses
 
     def serviceAny_TestStaleObjectAuth(self):
 
@@ -43,10 +37,7 @@ class TestAuthentications:
                                                                 "client_secret": auth.config["falcon_client_secret"]
                                                                 }))
         result = falcon.QueryAWSAccounts()
-        if result["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return result["status_code"] in AllowedResponses
 
     def serviceAny_TestObjectAuth(self):
         # Should also test direct auth in the authentication class
@@ -56,19 +47,13 @@ class TestAuthentications:
         auth_obj.token()
         falcon = FalconAWS(auth_object=auth_obj)
         result = falcon.QueryAWSAccounts()
-        if result["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return result["status_code"] in AllowedResponses
 
     def serviceAny_TestBadObjectAuth(self):
         # Should also test bad direct auth in the authentication class
         falcon = FalconAWS(auth_object=FalconAuth.OAuth2())
         result = falcon.QueryAWSAccounts()
-        if result["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return result["status_code"] in AllowedResponses
 
     def test_BadCredentialAuth(self):
         assert self.serviceAny_TestCredentialAuthFailure() is True

@@ -77,9 +77,11 @@ class OAuth2:
         self.token_renew_window = 20
         self.token_time = time.time()
         self.token_value = False
-        self.token_expired = lambda: bool(
-            (time.time() - self.token_time) >= (self.token_expiration - self.token_renew_window)
-            )
+        self.token_expired = (
+            lambda: time.time() - self.token_time
+            >= self.token_expiration - self.token_renew_window
+        )
+
         self.authenticated = lambda: not bool(self.token_expired())
 
     def token(self: object) -> dict:
@@ -114,10 +116,11 @@ class OAuth2:
         operation_id = "oauth2RevokeToken"
         target_url = f"{self.base_url}{[ep[2] for ep in Endpoints if operation_id in ep[0]][0]}"
         if "client_id" in self.creds and "client_secret" in self.creds:
-            header_payload = {'Authorization': 'basic {}'.format(
-                generate_b64cred(self.creds["client_id"], self.creds["client_secret"])
-                )}
-            data_payload = {'token': '{}'.format(token)}
+            header_payload = {
+                'Authorization': f'basic {generate_b64cred(self.creds["client_id"], self.creds["client_secret"])}'
+            }
+
+            data_payload = {'token': f'{token}'}
             returned = perform_request(method="POST", endpoint=target_url, data=data_payload, headers=header_payload,
                                        verify=self.ssl_verify, proxy=self.proxy, timeout=self.timeout)
             self.token_expiration = 0

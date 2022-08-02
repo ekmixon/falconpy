@@ -92,19 +92,20 @@ class DeviceControlPolicies(ServiceClass):
         operation_id = "performDeviceControlPoliciesAction"
         parameter_payload = args_to_params(parameters, kwargs, Endpoints, operation_id)
         action_name = parameter_payload.get("action_name", "Not Specified")
-        if action_name.lower() in _allowed_actions:
-            returned = process_service_request(
-                            calling_object=self,
-                            endpoints=Endpoints,
-                            operation_id=operation_id,
-                            body=body,
-                            keywords=kwargs,
-                            params=parameters
-                            )
-        else:
-            returned = generate_error_result("Invalid value specified for action_name parameter.")
-
-        return returned
+        return (
+            process_service_request(
+                calling_object=self,
+                endpoints=Endpoints,
+                operation_id=operation_id,
+                body=body,
+                keywords=kwargs,
+                params=parameters,
+            )
+            if action_name.lower() in _allowed_actions
+            else generate_error_result(
+                "Invalid value specified for action_name parameter."
+            )
+        )
 
     def set_precedence(self: object, body: dict) -> dict:
         """

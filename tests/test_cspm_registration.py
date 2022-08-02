@@ -30,17 +30,13 @@ class TestCSPMRegistration:
         if type(test_result) == bytes:
             return True
         else:
-            if test_result["body"]["errors"][0]["message"] == "No accounts found":
-                return True
-            else:
-                return False
+            return test_result["body"]["errors"][0]["message"] == "No accounts found"
 
     def cspm_generate_errors(self):
         """
         Test every code path within every method by generating 500s, does not hit the API
         """
         falcon.base_url = "nowhere"
-        error_checks = True
         tests = {
             "get_aws_account": falcon.GetCSPMAwsAccount(ids='12345678', org_ids='12345678')["status_code"],
             "create_aws_account": falcon.CreateCSPMAwsAccount(body={})["status_code"],
@@ -60,21 +56,15 @@ class TestCSPMRegistration:
             "get_ioa_events": falcon.GetIOAEvents()["status_code"],
             "get_ioa_users": falcon.GetIOAUsers()["status_code"],
         }
-        for key in tests:
-            if tests[key] != 500:
-                error_checks = False
-
-            # print(f"{key} operation returned a {tests[key]} status code")
-
-        return error_checks
+        return all(value == 500 for value in tests.values())
 
     def test_get_aws_console_setup_urls(self):
         """Pytest harness hook"""
-        assert bool(falcon.GetCSPMAwsConsoleSetupURLs()["status_code"] in AllowedResponses) is True
+        assert falcon.GetCSPMAwsConsoleSetupURLs()["status_code"] in AllowedResponses
 
     def test_get_aws_account_scripts_attachment(self):
         """Pytest harness hook"""
-        assert bool(type(falcon.GetCSPMAwsAccountScriptsAttachment()) == bytes) is True
+        assert type(falcon.GetCSPMAwsAccountScriptsAttachment()) == bytes
 
     def test_get_azure_user_scripts_attachment(self):
         """Pytest harness hook"""

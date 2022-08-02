@@ -37,7 +37,7 @@ class TestMLExclusions:
             ["deleteMLExclusionsV1", "ids='12345678'"]
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

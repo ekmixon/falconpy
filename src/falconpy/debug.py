@@ -45,11 +45,12 @@ import glob
 from . import oauth2 as FalconAuth
 
 
-def help(item=None):  # pylint: disable=W0622
+def help(item=None):    # pylint: disable=W0622
     """
     Debugger help function. Overrides the built in python function.
     """
-    text = """
+    if item is None:
+        text = """
     This is an interactive Python shell. Python help is available under python_help().
 
     AUTHENTICATION
@@ -78,7 +79,6 @@ def help(item=None):  # pylint: disable=W0622
     EXIT THE DEBUG
     Use exit / quit / CTRL-D to exit the debugger.
     """
-    if item is None:
         print(text)
     elif callable(getattr(item, 'help', None)):
         item.help()
@@ -145,7 +145,11 @@ def import_module(module: str = None):
         if found:
             current_module = sys.modules[f"{import_location}.{module}"]
             for key in dir(current_module):
-                if isinstance(getattr(current_module, key), type) and not key == "ServiceClass" and "_" not in key:
+                if (
+                    isinstance(getattr(current_module, key), type)
+                    and key != "ServiceClass"
+                    and "_" not in key
+                ):
                     _.append(getattr(_[0], key))
                     returned_object = _[1](auth_object=AUTH_OBJECT)
                     print(f"Service Class {key} imported successfully.")

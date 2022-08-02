@@ -83,18 +83,17 @@ class Configuration:  # pylint: disable=R0903
         if args.config_file:
             self.config_file = args.config_file
         self.log_level = logging.INFO
-        if args.log_level:
-            if args.log_level.upper() in "DEBUG,WARN,ERROR".split(","):
-                if args.log_level.upper() == "DEBUG":
-                    self.log_level = logging.DEBUG
-                elif args.log_level.upper() == "WARN":
-                    self.log_level = logging.WARN
-                elif args.log_level.upper() == "ERROR":
-                    self.log_level = logging.ERROR
+        if args.log_level and args.log_level.upper() in "DEBUG,WARN,ERROR".split(
+            ","
+        ):
+            if args.log_level.upper() == "DEBUG":
+                self.log_level = logging.DEBUG
+            elif args.log_level.upper() == "WARN":
+                self.log_level = logging.WARN
+            elif args.log_level.upper() == "ERROR":
+                self.log_level = logging.ERROR
 
-        self.target_pattern = "**/*.*"
-        if args.pattern:
-            self.target_pattern = args.pattern
+        self.target_pattern = args.pattern or "**/*.*"
         self.scan_delay = 3
         if args.check_delay:
             try:

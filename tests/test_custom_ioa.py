@@ -22,7 +22,6 @@ class TestCustomIOA:
     def ioa_generate_errors():
         """Generates errors for every operation and tests every code path"""
         falcon.base_url = "nowhere"
-        error_checks = True
         # Intentionally crossing both code patterns for a while with this - jshcodes @ 08.10.21
         tests = {
             "get_patterns": falcon.get_patterns(ids='12345678')["status_code"],
@@ -47,35 +46,31 @@ class TestCustomIOA:
             "query_rule_types": falcon.query_rule_types()["status_code"],
             "query_rules": falcon.query_rulesMixin0()["status_code"]
         }
-        for key in tests:
-            if tests[key] != 500:
-                error_checks = False
-
-        return error_checks
+        return all(value == 500 for value in tests.values())
 
     def test_query_patterns(self):
         """Pytest harness hook"""
-        assert bool(falcon.query_patterns()["status_code"] in AllowedResponses) is True
+        assert falcon.query_patterns()["status_code"] in AllowedResponses
 
     def test_query_platforms(self):
         """Pytest harness hook"""
-        assert bool(falcon.query_platformsMixin0()["status_code"] in AllowedResponses) is True
+        assert falcon.query_platformsMixin0()["status_code"] in AllowedResponses
 
     def test_query_rule_groups_full(self):
         """Pytest harness hook"""
-        assert bool(falcon.query_rule_groups_full()["status_code"] in AllowedResponses) is True
+        assert falcon.query_rule_groups_full()["status_code"] in AllowedResponses
 
     def test_query_rule_groups(self):
         """Pytest harness hook"""
-        assert bool(falcon.query_rule_groupsMixin0()["status_code"] in AllowedResponses) is True
+        assert falcon.query_rule_groupsMixin0()["status_code"] in AllowedResponses
 
     def test_query_rule_types(self):
         """Pytest harness hook"""
-        assert bool(falcon.query_rule_types()["status_code"] in AllowedResponses) is True
+        assert falcon.query_rule_types()["status_code"] in AllowedResponses
 
     def test_query_rules(self):
         """Pytest harness hook"""
-        assert bool(falcon.query_rulesMixin0()["status_code"] in AllowedResponses) is True
+        assert falcon.query_rulesMixin0()["status_code"] in AllowedResponses
 
     def test_errors(self):
         """Pytest harness hook"""

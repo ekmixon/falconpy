@@ -24,10 +24,7 @@ args = parser.parse_args()
 # Hostname of the machine to contain / release
 hostname = args.hostname
 # Default action is to quarantine
-if args.lift_containment:
-    action = "lift_containment"
-else:
-    action = "contain"
+action = "lift_containment" if args.lift_containment else "contain"
 # Use the credentials file provided
 creds_file = args.creds_file
 # Load the contents of the creds file into the creds dictionary

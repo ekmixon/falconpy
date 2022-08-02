@@ -18,25 +18,21 @@ AllowedResponses = [200, 429]
 
 class TestInstallationTokens:
     def serviceIT_GetCustomerSettings(self):
-        returned = False
-        if falcon.customer_settings_read()["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return falcon.customer_settings_read()["status_code"] in AllowedResponses
 
     def serviceIT_QueryAuditEvents(self):
-        returned = False
-        if falcon.audit_events_query(limit=1, offset=2)["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return (
+            falcon.audit_events_query(limit=1, offset=2)["status_code"]
+            in AllowedResponses
+        )
 
     def serviceIT_QueryTokens(self):
-        returned = False
-        if falcon.tokens_query(bananas="yellow", limit=1, parameters={"offset": 2})["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return (
+            falcon.tokens_query(
+                bananas="yellow", limit=1, parameters={"offset": 2}
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def serviceIT_GenerateErrors(self):
         falcon.base_url = "nowhere"
@@ -49,7 +45,7 @@ class TestInstallationTokens:
             ["tokens_create", "body={}"]
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

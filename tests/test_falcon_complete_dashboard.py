@@ -18,53 +18,42 @@ AllowedResponses = [200, 403, 429]
 
 class TestFalconCompleteDashboard:
     def ServiceFCD_QueryAllowListFilter(self):
-        returned = False
-        if falcon.QueryAllowListFilter()["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return falcon.QueryAllowListFilter()["status_code"] in AllowedResponses
 
     def ServiceFCD_QueryBlockListFilter(self):
-        returned = False
-        if falcon.QueryBlockListFilter()["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return falcon.QueryBlockListFilter()["status_code"] in AllowedResponses
 
     def ServiceFCD_QueryDetectionIdsByFilter(self):
-        returned = False
-        if falcon.QueryDetectionIdsByFilter(bananas="yellow")["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return (
+            falcon.QueryDetectionIdsByFilter(bananas="yellow")["status_code"]
+            in AllowedResponses
+        )
 
     def ServiceFCD_GetDeviceCountCollectionQueriesByFilter(self):
-        returned = False
-        if falcon.GetDeviceCountCollectionQueriesByFilter(parameters={"limit": 1})["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return (
+            falcon.GetDeviceCountCollectionQueriesByFilter(
+                parameters={"limit": 1}
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def ServiceFCD_QueryEscalationsFilter(self):
-        returned = False
-        if falcon.QueryEscalationsFilter(limit=1,offset=2)["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return (
+            falcon.QueryEscalationsFilter(limit=1, offset=2)["status_code"]
+            in AllowedResponses
+        )
 
     def ServiceFCD_QueryIncidentIdsByFilter(self):
-        returned = False
-        if falcon.QueryIncidentIdsByFilter(bananas="yellow")["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return (
+            falcon.QueryIncidentIdsByFilter(bananas="yellow")["status_code"]
+            in AllowedResponses
+        )
 
     def ServiceFCD_QueryRemediationsFilter(self):
-        returned = False
-        if falcon.QueryRemediationsFilter(bananas="yellow")["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return (
+            falcon.QueryRemediationsFilter(bananas="yellow")["status_code"]
+            in AllowedResponses
+        )
 
     def ServiceFCD_GenerateErrors(self):
         falcon.base_url = "nowhere"
@@ -80,7 +69,7 @@ class TestFalconCompleteDashboard:
 
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

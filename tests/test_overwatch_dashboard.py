@@ -25,36 +25,38 @@ class TestOverwatchDashboard:
         Test code paths within methods by generating 500s, does not hit the API
         """
         falcon.base_url = "nowhere"
-        error_checks = True
         tests = {
             "aggregates_events": falcon.AggregatesEvents(body={})["status_code"],
             "aggregates_events_collections": falcon.AggregatesEventsCollections(body=[{}])["status_code"]
         }
-        for key in tests:
-            if tests[key] != 500:
-                error_checks = False
-
-            # print(f"{key} processed with a {tests[key]} response")
-
-        return error_checks
+        return all(value == 500 for value in tests.values())
 
     def test_aggregates_detections_global_counts(self):
         """
         Pytest harness hook
         """
-        assert bool(falcon.AggregatesDetectionsGlobalCounts()["status_code"] in AllowedResponses) is True
+        assert (
+            falcon.AggregatesDetectionsGlobalCounts()["status_code"]
+            in AllowedResponses
+        )
 
     def test_aggregates_incidents_global_counts(self):
         """
         Pytest harness hook
         """
-        assert bool(falcon.AggregatesIncidentsGlobalCounts()["status_code"] in AllowedResponses) is True
+        assert (
+            falcon.AggregatesIncidentsGlobalCounts()["status_code"]
+            in AllowedResponses
+        )
 
     def test_aggregates_events_global_counts(self):
         """
         Pytest harness hook
         """
-        assert bool(falcon.AggregatesOWEventsGlobalCounts(bananas="yellow")["status_code"] in AllowedResponses) is True
+        assert (
+            falcon.AggregatesOWEventsGlobalCounts(bananas="yellow")["status_code"]
+            in AllowedResponses
+        )
 
     def test_errors(self):
         """

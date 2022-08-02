@@ -90,17 +90,20 @@ def format_json_data(json_data):
         policy = ""
         for h in headers:
             if h in p.keys():
-                if h == headers[-1]:
-                    str_line = "\"{}\": \"{}\"".format(
-                        h, str(p[h]).strip("\n").replace('"', ''))
-                else:
-                    str_line = "\"{}\": \"{}\", ".format(
-                        h, str(p[h]).strip("\n").replace('"', ''))
+                str_line = (
+                    "\"{}\": \"{}\"".format(
+                        h, str(p[h]).strip("\n").replace('"', '')
+                    )
+                    if h == headers[-1]
+                    else "\"{}\": \"{}\", ".format(
+                        h, str(p[h]).strip("\n").replace('"', '')
+                    )
+                )
+
+            elif h == headers[-1]:
+                str_line = f'\"{h}\": \"\"'
             else:
-                if h == headers[-1]:
-                    str_line = "\"{}\": \"{}\"".format(h, "")
-                else:
-                    str_line = "\"{}\": \"{}\", ".format(h, "")
+                str_line = f'\"{h}\": \"\", '
             policy += str_line
         new_dict = "{{{}}}".format(policy)
         list_dict.append(json.loads(new_dict))
@@ -109,8 +112,10 @@ def format_json_data(json_data):
 
 # determine if we are reporting on a single cloud-platform
 if cloud:
-    policies = falcon.GetCSPMPolicySettings(
-        "cloud-platform=" + cloud)['body']['resources']
+    policies = falcon.GetCSPMPolicySettings(f"cloud-platform={cloud}")['body'][
+        'resources'
+    ]
+
 else:
     policies = falcon.GetCSPMPolicySettings()['body']['resources']
 

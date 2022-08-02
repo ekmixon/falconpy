@@ -25,7 +25,6 @@ class TestIntel:
         """
         Tests every statement within every method of the class, accepts all errors except 500
         """
-        error_checks = True
         tests = {
             "query_intel_actor_entities": falcon.QueryIntelActorEntities(limit=1)["status_code"],
             "query_intel_indicator_entities": falcon.QueryIntelIndicatorEntities(parameters={"limit": 1})["status_code"],
@@ -42,13 +41,7 @@ class TestIntel:
             "query_intel_report_ids": falcon.QueryIntelReportIds(limit=1)["status_code"],
             "query_intel_rule_ids": falcon.QueryIntelRuleIds(parameters={"type": "common-event-format"})["status_code"]
         }
-        for key in tests:
-            if tests[key] not in AllowedResponses:
-                error_checks = False
-
-            # print(f"{key} operation returned a {tests[key]} status code")
-
-        return error_checks
+        return all(value in AllowedResponses for value in tests.values())
 
     def test_all_code_paths(self):
         assert self.intel_test_all_code_paths() is True

@@ -20,14 +20,15 @@ AllowedResponses = [200, 429]  # Adding rate-limiting as an allowed response for
 
 class TestSpotlight:
     def serviceSpotlight_queryVulnerabilities(self):
-        if falcon.queryVulnerabilities(
-                                       parameters={"limit": 1,
-                                                   "filter": "created_timestamp:>'2021-01-01T00:00:01Z'"
-                                                   }
-                                       )["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryVulnerabilities(
+                parameters={
+                    "limit": 1,
+                    "filter": "created_timestamp:>'2021-01-01T00:00:01Z'",
+                }
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def serviceSpotlight_getVulnerabilities(self):
         try:
@@ -35,10 +36,11 @@ class TestSpotlight:
                                                               "filter": "created_timestamp:>'2021-01-01T00:00:01Z'"
                                                               }
                                                   )["body"]["resources"][0]
-            if falcon.getVulnerabilities(ids=id_list)["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return (
+                falcon.getVulnerabilities(ids=id_list)["status_code"]
+                in AllowedResponses
+            )
+
         except KeyError:
             # Flaky
             pytest.skip("Workflow-related error, skipping")

@@ -20,24 +20,29 @@ AllowedResponses = [200, 429, 500]  # Adding 500 as an allowed response for now
 
 class TestFalconSensorUpdate:
     def serviceSensorUpdate_querySensorUpdatePolicies(self):
-        if falcon.querySensorUpdatePolicies(parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.querySensorUpdatePolicies(parameters={"limit": 1})[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     def serviceSensorUpdate_querySensorUpdatePolicyMembers(self):
-        if falcon.querySensorUpdatePolicyMembers(parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.querySensorUpdatePolicyMembers(parameters={"limit": 1})[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     def serviceSensorUpdate_getSensorUpdatePolicies(self):
         try:
             id_list = falcon.querySensorUpdatePolicies(parameters={"limit": 1})["body"]["resources"][0]
-            if falcon.getSensorUpdatePolicies(ids=id_list)["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return (
+                falcon.getSensorUpdatePolicies(ids=id_list)["status_code"]
+                in AllowedResponses
+            )
+
         except KeyError:
             # Flaky
             pytest.skip("Workflow-related error, skipping")
@@ -46,26 +51,31 @@ class TestFalconSensorUpdate:
     def serviceSensorUpdate_getSensorUpdatePoliciesV2(self):
         try:
             id_list = falcon.querySensorUpdatePolicies(parameters={"limit": 1})["body"]["resources"][0]
-            if falcon.getSensorUpdatePoliciesV2(ids=id_list)["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return (
+                falcon.getSensorUpdatePoliciesV2(ids=id_list)["status_code"]
+                in AllowedResponses
+            )
+
         except KeyError:
             # Flaky
             pytest.skip("Workflow-related error, skipping")
             return True
 
     def serviceSensorUpdate_queryCombinedSensorUpdatePolicies(self):
-        if falcon.queryCombinedSensorUpdatePolicies(parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryCombinedSensorUpdatePolicies(parameters={"limit": 1})[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     def serviceSensorUpdate_queryCombinedSensorUpdatePolicyMembers(self):
-        if falcon.queryCombinedSensorUpdatePolicyMembers(parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryCombinedSensorUpdatePolicyMembers(parameters={"limit": 1})[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     def serviceSensorUpdate_GenerateErrors(self):
         falcon.base_url = "nowhere"
@@ -91,7 +101,7 @@ class TestFalconSensorUpdate:
         ]
 
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

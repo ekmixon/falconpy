@@ -30,9 +30,9 @@ class TestSampleUploads:
         sdtdate = datetime.datetime.strptime(stddate, fmt)
         sdtdate = sdtdate.timetuple()
         jdate = sdtdate.tm_yday
-        jdate = "{}{}".format(stddate.replace("-", "").replace(":", "").replace(" ", ""), jdate)
-        SOURCE = "%s_source.png" % jdate
-        TARGET = "tests/%s_target.png" % jdate
+        jdate = f'{stddate.replace("-", "").replace(":", "").replace(" ", "")}{jdate}'
+        SOURCE = f"{jdate}_source.png"
+        TARGET = f"tests/{jdate}_target.png"
         PAYLOAD = open(FILENAME, 'rb').read()
         response = falcon.UploadSampleV3(file_name=SOURCE, file_data=PAYLOAD)
         try:
@@ -51,18 +51,18 @@ class TestSampleUploads:
             hash1 = hashlib.sha256()
             with open(FILENAME, 'rb') as f:
                 while True:
-                    data = f.read(buf)
-                    if not data:
+                    if data := f.read(buf):
+                        hash1.update(data)
+                    else:
                         break
-                    hash1.update(data)
             hash1 = hash1.hexdigest()
             hash2 = hashlib.sha256()
             with open(TARGET, 'rb') as f:
                 while True:
-                    data = f.read(buf)
-                    if not data:
+                    if data := f.read(buf):
+                        hash2.update(data)
+                    else:
                         break
-                    hash2.update(data)
             hash2 = hash2.hexdigest()
             if os.path.exists(TARGET):
                 os.remove(TARGET)
@@ -81,19 +81,12 @@ class TestSampleUploads:
         """
         Executes every statement in every method of the class, accepts all errors except 500
         """
-        error_checks = True
         tests = {
             "upload_sample": falcon.UploadSampleV3(file_data={}, file_name='oops_I_broke_it.jpg')["status_code"],
             "get_sample": falcon.GetSampleV3(ids='DoesNotExist')["status_code"],
             "delete_sample": falcon.DeleteSampleV3(ids='12345678')["status_code"]
         }
-        for key in tests:
-            if tests[key] not in AllowedResponses:
-                error_checks = False
-
-            # print(f"{key} operation returned a {tests[key]} status code")
-
-        return error_checks
+        return all(value in AllowedResponses for value in tests.values())
 
     def test_all_functionality(self):
         """Pytest harness hook"""

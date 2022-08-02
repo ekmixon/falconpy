@@ -21,34 +21,46 @@ AllowedResponses = [200, 429] #Adding rate-limiting as an allowed response for n
 class TestIncidents:
 
     def serviceIncidents_CrowdScore(self):
-        if falcon.CrowdScore(parameters={"limit":1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.CrowdScore(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     def serviceIncidents_QueryBehaviors(self):
-        if falcon.QueryBehaviors(parameters={"limit":1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.QueryBehaviors(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     def serviceIncidents_QueryIncidents(self):
-        if falcon.QueryIncidents(parameters={"limit":1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.QueryIncidents(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     def serviceIncidents_GetBehaviors(self):
-        if falcon.GetBehaviors(body={"ids":falcon.QueryBehaviors(parameters={"limit":1})["body"]["resources"]})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.GetBehaviors(
+                body={
+                    "ids": falcon.QueryBehaviors(parameters={"limit": 1})["body"][
+                        "resources"
+                    ]
+                }
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def serviceIncidents_GetIncidents(self):
-        if falcon.GetIncidents(body={"ids":falcon.QueryIncidents(parameters={"limit":1})["body"]["resources"]})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.GetIncidents(
+                body={
+                    "ids": falcon.QueryIncidents(parameters={"limit": 1})["body"][
+                        "resources"
+                    ]
+                }
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def serviceIncidents_GenerateErrors(self):
         falcon.base_url = "nowhere"
@@ -62,9 +74,9 @@ class TestIncidents:
             ["QueryIncidents",""]
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0],cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
-        
+
         return errorChecks
 
     def test_CrowdScore(self):

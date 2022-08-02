@@ -25,9 +25,11 @@ def device_detail(aids: list):
     devices = []
     # return just the aid and agent version
     for device in result["body"]["resources"]:
-        res = {}
-        res["hostname"] = device["hostname"]
-        res["agent_version"] = device["agent_version"]
+        res = {
+            "hostname": device["hostname"],
+            "agent_version": device["agent_version"],
+        }
+
         devices.append(res)
     return devices
 

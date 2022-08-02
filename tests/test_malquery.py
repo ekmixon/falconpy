@@ -18,11 +18,7 @@ AllowedResponses = [200, 429]  # Adding rate-limiting as an allowed response for
 
 class TestMalQuery:
     def serviceMQ_GetQuotas(self):
-        returned = False
-        if falcon.GetMalQueryQuotasV1()["status_code"] in AllowedResponses:
-            returned = True
-
-        return returned
+        return falcon.GetMalQueryQuotasV1()["status_code"] in AllowedResponses
 
     def serviceMQ_GenerateErrors(self):
         falcon.base_url = "nowhere"
@@ -39,7 +35,7 @@ class TestMalQuery:
 
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

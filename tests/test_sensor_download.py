@@ -18,7 +18,7 @@ class TestSensorDownload():
     @staticmethod
     def _get_cid():
         resp = sensor_download_client.GetSensorInstallersCCIDByQuery()
-        return True if resp["status_code"] in AllowedResponses else False
+        return resp["status_code"] in AllowedResponses
 
     @staticmethod
     def _get_multiple_shas():
@@ -35,10 +35,7 @@ class TestSensorDownload():
     def _download_sensor(self):
         sha_id = self._get_multiple_shas()[0]
         resp = sensor_download_client.DownloadSensorInstallerById(parameters={"id": sha_id})
-        if isinstance(resp, bytes):
-            return True
-        else:
-            return False
+        return isinstance(resp, bytes)
 
     def _download_sensor_file(self):
         file_name = "sensor.rpm"
@@ -48,11 +45,10 @@ class TestSensorDownload():
                                                                file_name=file_name,
                                                                download_path=directory_path
                                                                )
-        if os.path.exists("sensor.rpm"):
-            os.remove("sensor.rpm")
-            return True
-        else:
+        if not os.path.exists("sensor.rpm"):
             return False
+        os.remove("sensor.rpm")
+        return True
 
     @staticmethod
     def _get_metadata_for_filter():
@@ -60,22 +56,22 @@ class TestSensorDownload():
         # params = {"filter": 'platform:"windows"', "sort": "release_date|desc"}
         # resp = sensor_download_client.GetCombinedSensorInstallersByQuery(parameters=params)
         resp = sensor_download_client.GetCombinedSensorInstallersByQuery(filter='platform:"windows"', sort="release_date|desc")
-        return True if resp["status_code"] in AllowedResponses else False
+        return resp["status_code"] in AllowedResponses
 
     def _get_metadata_for_ids(self):
         sha_ids = self._get_multiple_shas()
         resp = sensor_download_client.GetSensorInstallersEntities(ids=sha_ids)
-        return True if resp["status_code"] in AllowedResponses else False
+        return resp["status_code"] in AllowedResponses
 
     @staticmethod
     def _get_all_metadata():
         resp = sensor_download_client.GetCombinedSensorInstallersByQuery()
-        return True if resp["status_code"] in AllowedResponses else False
+        return resp["status_code"] in AllowedResponses
 
     @staticmethod
     def _get_all_metadata2():
         resp = sensor_download_client.GetSensorInstallersByQuery()
-        return True if resp["status_code"] in AllowedResponses else False
+        return resp["status_code"] in AllowedResponses
 
     def test_download_windows_sensor(self):
         assert self._download_sensor() is True

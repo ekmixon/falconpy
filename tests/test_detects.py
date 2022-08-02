@@ -24,12 +24,16 @@ class TestDetects:
     """
 
     def serviceDetects_GetDetectSummaries(self):
-        if falcon.GetDetectSummaries(
-                body={"ids": falcon.QueryDetects(parameters={"limit": 1})["body"]["resources"]}
-                )["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.GetDetectSummaries(
+                body={
+                    "ids": falcon.QueryDetects(parameters={"limit": 1})["body"][
+                        "resources"
+                    ]
+                }
+            )["status_code"]
+            in AllowedResponses
+        )
 
     # def serviceDetects_GetAggregateDetects(self):
     #     print(falcon.QueryDetects(parameters={"limit":1}))
@@ -61,7 +65,10 @@ class TestDetects:
         return errorChecks
 
     def test_QueryDetects(self):
-        assert bool(falcon.QueryDetects(parameters={"limit": 1})["status_code"] in AllowedResponses) is True
+        assert (
+            falcon.QueryDetects(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     @pytest.mark.skipif(falcon.QueryDetects(parameters={"limit": 1})["status_code"] == 429, reason="API rate limit reached")
     def test_GetDetectSummaries(self):

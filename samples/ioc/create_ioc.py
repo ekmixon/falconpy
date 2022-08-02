@@ -24,17 +24,15 @@ def connectAPI(class_type: str = "service"):
         "client_secret": config["falcon_client_secret"]
     }
     if class_type.lower() == "service":
-        falcon = IOC(creds=creds)
+        return IOC(creds=creds)
     elif class_type.lower() == "uber":
-        falcon = Uber(creds=creds)
+        return Uber(creds=creds)
     else:
-        falcon = None
-
-    return falcon
+        return None
 
 
 def createIOCPayload(source: str, action: str, expiration: str, desc: str, type: str, val: str, platforms: list):
-    payload = {
+    return {
         "indicators": [
             {
                 "source": source,
@@ -44,11 +42,10 @@ def createIOCPayload(source: str, action: str, expiration: str, desc: str, type:
                 "type": type,
                 "value": val,
                 "platforms": platforms,
-                "applied_globally": True
+                "applied_globally": True,
             }
         ]
     }
-    return payload
 
 
 # Create an IOC using the IOC Service class

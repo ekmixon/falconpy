@@ -100,18 +100,16 @@ def generate_b64cred(client_id: str, client_secret: str) -> str:
     """
     base64 encodes passed client_id and client_secret for authorization headers.
     """
-    cred = "{}:{}".format(client_id, client_secret)
+    cred = f"{client_id}:{client_secret}"
     b64_byt = base64.b64encode(cred.encode("ascii"))
-    encoded = b64_byt.decode("ascii")
-
-    return encoded
+    return b64_byt.decode("ascii")
 
 
 def handle_single_argument(passed_arguments: list, passed_keywords: dict, search_key: str) -> dict:
     """
     Reviews arguments passed to a method and injects them into the keyword dictionary if they match the search string
     """
-    if len(passed_arguments) > 0:
+    if passed_arguments:
         passed_keywords[search_key] = passed_arguments[0]
 
     return passed_keywords
@@ -160,19 +158,21 @@ def force_default(defaults: list, default_types: list = None):
     return wrapper
 
 
-def service_request(caller: object = None, **kwargs) -> object:  # May return dict or object datatypes
+def service_request(caller: object = None, **kwargs) -> object:    # May return dict or object datatypes
     """
     Checks for token expiration, refreshing if possible and then performs the request.
     """
     if caller:
         try:
-            if caller.auth_object:
-                if caller.auth_object.token_expired():
-                    auth_response = caller.auth_object.token()
-                    if auth_response["status_code"] == 201:
-                        caller.headers['Authorization'] = 'Bearer {}'.format(auth_response['body']['access_token'])
-                    else:
-                        caller.headers['Authorization'] = 'Bearer '
+            if caller.auth_object and caller.auth_object.token_expired():
+                auth_response = caller.auth_object.token()
+                if auth_response["status_code"] == 201:
+                    caller.headers[
+                        'Authorization'
+                    ] = f"Bearer {auth_response['body']['access_token']}"
+
+                else:
+                    caller.headers['Authorization'] = 'Bearer '
         except AttributeError:
             pass
 
@@ -186,13 +186,11 @@ def service_request(caller: object = None, **kwargs) -> object:  # May return di
         except AttributeError:
             timeout = None
 
-    returned = perform_request(proxy=proxy, timeout=timeout, **kwargs)
-
-    return returned
+    return perform_request(proxy=proxy, timeout=timeout, **kwargs)
 
 
 @force_default(defaults=["headers"], default_types=["dict"])
-def perform_request(endpoint: str = "", headers: dict = None, **kwargs) -> object:  # May return dict or object datatypes
+def perform_request(endpoint: str = "", headers: dict = None, **kwargs) -> object:    # May return dict or object datatypes
     """
     Leverages the requests library to perform the requested CrowdStrike OAuth2 API operation.
 
@@ -224,8 +222,8 @@ def perform_request(endpoint: str = "", headers: dict = None, **kwargs) -> objec
         - Example: (5.05, 25)
     """
     method = kwargs.get("method", "GET")
-    body = kwargs.get("body", None)
-    body_validator = kwargs.get("body_validator", None)
+    body = kwargs.get("body")
+    body_validator = kwargs.get("body_validator")
     perform = True
     if method.upper() in _ALLOWED_METHODS:
         # Validate parameters
@@ -235,13 +233,9 @@ def perform_request(endpoint: str = "", headers: dict = None, **kwargs) -> objec
         if body_validator:
             try:
                 validate_payload(body_validator, body, kwargs.get("body_required", None))
-            except ValueError as err:
+            except (ValueError, TypeError) as err:
                 returned = generate_error_result(message=f"{str(err)}")
                 perform = False
-            except TypeError as err:
-                returned = generate_error_result(message=f"{str(err)}")
-                perform = False
-
         # Perform the request
         if perform:
             headers["User-Agent"] = _USER_AGENT  # Force all requests to pass the User-Agent identifier
@@ -292,17 +286,14 @@ def get_default(types: list, position: int):
     """
     default_value_names = ["list", "str", "int", "dict", "bool"]
     default_value_types = [[], "", 0, {}, False]
-    value_count = 0
     retval = {}  # Default to dictionary data type as that is our most often used
-    for type_ in default_value_names:
+    for value_count, type_ in enumerate(default_value_names):
         try:
             if type_ in types[position]:
                 retval = default_value_types[value_count]
         except IndexError:
             # Data type not specified, fall back to dictionary
             pass
-        value_count += 1
-
     return retval
 
 
@@ -336,12 +327,12 @@ def args_to_params(payload: dict, passed_arguments: dict, endpoints: list, epnam
     for arg in passed_arguments:
         eps = [ep[5] for ep in endpoints if epname in ep[0]][0]
         try:
-            argument = [param for param in eps if param["name"] == arg][0]
-            if argument:
+            if argument := [param for param in eps if param["name"] == arg][0]:
                 arg_name = argument["name"]
-                if argument["type"] == "array":
-                    if isinstance(passed_arguments[arg_name], (str)):
-                        passed_arguments[arg_name] = passed_arguments[arg_name].split(",")
+                if argument["type"] == "array" and isinstance(
+                    passed_arguments[arg_name], (str)
+                ):
+                    passed_arguments[arg_name] = passed_arguments[arg_name].split(",")
                 # More data type validation can go here
                 payload[arg_name] = passed_arguments[arg_name]
         except IndexError:
@@ -379,16 +370,19 @@ def process_service_request(calling_object: object,
     # (after the uber class has been updated to no longer need it and the _endpoints module has been updated)
     target_url = f"{calling_object.base_url}{target_endpoint[2]}".replace("?ids={}", "")
     target_method = target_endpoint[1]
-    passed_partition = kwargs.get("partition", None)
-    if passed_partition:
+    if passed_partition := kwargs.get("partition", None):
         target_url = target_url.format(str(passed_partition))
     # Retrieve our keyword arguments
-    passed_keywords = kwargs.get("keywords", None)
-    passed_params = kwargs.get("params", None)
-    parameter_payload = None
+    passed_keywords = kwargs.get("keywords")
+    passed_params = kwargs.get("params")
     if passed_keywords or passed_params:
-        parameter_payload = args_to_params(passed_params, passed_keywords, endpoints, operation_id)
-    passed_headers = kwargs.get("headers", None) if kwargs.get("headers", None) else calling_object.headers
+        parameter_payload = args_to_params(
+            passed_params, passed_keywords, endpoints, operation_id
+        )
+
+    else:
+        parameter_payload = None
+    passed_headers = kwargs.get("headers", None) or calling_object.headers
     new_keywords = {
         "caller": calling_object,
         "method": target_method,

@@ -54,8 +54,8 @@ class ServiceClass:
         """
         access_token, self.ssl_verify, self.timeout = self.parse_keywords(kwargs)
         self.refreshable = False
-        client_id = kwargs.get("client_id", None)
-        client_secret = kwargs.get("client_secret", None)
+        client_id = kwargs.get("client_id")
+        client_secret = kwargs.get("client_secret")
         if client_id and client_secret and not creds:
             # Passing client_id and client_secret will not
             # overwrite the contents of the creds dictionary
@@ -69,13 +69,13 @@ class ServiceClass:
                 _ = self.auth_object.token()
                 if _["status_code"] == 201:
                     self.token = _["body"]["access_token"]
-                    self.headers = {'Authorization': 'Bearer {}'.format(self.token)}
+                    self.headers = {'Authorization': f'Bearer {self.token}'}
                 else:
                     self.token = False
                     self.headers = {}
             else:
                 self.token = self.auth_object.token_value
-                self.headers = {'Authorization': 'Bearer {}'.format(self.token)}
+                self.headers = {'Authorization': f'Bearer {self.token}'}
 
             self.base_url = auth_object.base_url
             self.ssl_verify = auth_object.ssl_verify
@@ -95,14 +95,14 @@ class ServiceClass:
                 _ = self.auth_object.token()
                 if _["status_code"] == 201:
                     self.token = _["body"]["access_token"]
-                    self.headers = {'Authorization': 'Bearer {}'.format(self.token)}
+                    self.headers = {'Authorization': f'Bearer {self.token}'}
                 else:
                     self.token = False
                     self.headers = {}
                 self.refreshable = True
             else:
                 self.auth_object = None
-                self.headers = {'Authorization': 'Bearer {}'.format(access_token)}
+                self.headers = {'Authorization': f'Bearer {access_token}'}
 
             self.base_url = base_url
             self.proxy = proxy
@@ -111,21 +111,13 @@ class ServiceClass:
         """
         Authenticates using the credentials provided.
         """
-        result = None
-        if self.auth_object:
-            result = self.auth_object.authenticated()
-
-        return result
+        return self.auth_object.authenticated() if self.auth_object else None
 
     def token_expired(self):
         """
         Returns a boolean reflecting token expiration status
         """
-        result = None
-        if self.auth_object:
-            result = self.auth_object.token_expired()
-
-        return result
+        return self.auth_object.token_expired() if self.auth_object else None
 
     @staticmethod
     def parse_keywords(passed_keywords: dict):

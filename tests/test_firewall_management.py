@@ -1,4 +1,5 @@
 """ test_firewall_management.py - This class tests the firewall_management service class"""
+
 import os
 import sys
 import datetime
@@ -18,7 +19,7 @@ stddate = datetime.datetime.now().strftime(fmt)
 sdtdate = datetime.datetime.strptime(stddate, fmt)
 sdtdate = sdtdate.timetuple()
 jdate = sdtdate.tm_yday
-jdate = "{}{}".format(stddate.replace("-", "").replace(":", "").replace(" ", ""), jdate)
+jdate = f'{stddate.replace("-", "").replace(":", "").replace(" ", "")}{jdate}'
 rule_group_name = f"falconpy_debug_{jdate}"
 rule_group_id = ""
 
@@ -39,7 +40,6 @@ class TestFirewallManagement:
 
     def firewall_test_all_code_paths(self):
         """Test every code path, accepts all errors except 500"""
-        error_checks = True
         tests = {
             "aggregate_events": falcon.aggregate_events(body={}),
             "aggregate_policy_rules": falcon.aggregate_policy_rules(body={}),
@@ -66,13 +66,11 @@ class TestFirewallManagement:
             "query_rule_groups": falcon.query_rule_groups(),
             "query_rules": falcon.query_rules()
         }
-        for key in tests:
-
-            if tests[key]["status_code"] not in AllowedResponses:
-                error_checks = False
 #               print(f"Failed on {key} with {tests[key]}")
 #            print(tests[key])
-        return error_checks
+        return all(
+            value["status_code"] in AllowedResponses for value in tests.values()
+        )
 
     def test_all_paths(self):
         """Pytest harness hook"""

@@ -23,12 +23,8 @@ class TestTimeouts:
             'client_id': auth.config["falcon_client_id"],
             'client_secret': auth.config["falcon_client_secret"]
         })
-        success = False
         result = falcon.QueryAWSAccounts()
-        if result['status_code'] in AllowedResponses:
-            success = True
-
-        return success
+        return result['status_code'] in AllowedResponses
 
     def timeout_connect(self):
         falconConnectFail = FalconAWS(creds={
@@ -36,13 +32,11 @@ class TestTimeouts:
             'client_secret': auth.config["falcon_client_secret"]
         }, timeout=(.001, 5)
         )
-        success = False
         result = falconConnectFail.QueryAWSAccounts()
-        if result['status_code'] in AllowedResponses:
-            if "connect timeout" in result["body"]["errors"][0]["message"]:
-                success = True
-
-        return success
+        return (
+            result['status_code'] in AllowedResponses
+            and "connect timeout" in result["body"]["errors"][0]["message"]
+        )
 
     def timeout_read(self):
         falconReadFail = FalconAWS(creds={
@@ -50,13 +44,11 @@ class TestTimeouts:
             'client_secret': auth.config["falcon_client_secret"]
         }, timeout=(5, .001)
         )
-        success = False
         result = falconReadFail.QueryAWSAccounts()
-        if result['status_code'] in AllowedResponses:
-            if "read timeout" in result["body"]["errors"][0]["message"]:
-                success = True
-
-        return success
+        return (
+            result['status_code'] in AllowedResponses
+            and "read timeout" in result["body"]["errors"][0]["message"]
+        )
 
     def timeout_standard(self):
         falconStandardFail = FalconAWS(creds={
@@ -64,26 +56,22 @@ class TestTimeouts:
             'client_secret': auth.config["falcon_client_secret"]
         }, timeout=.001
         )
-        success = False
         result = falconStandardFail.QueryAWSAccounts()
-        if result['status_code'] in AllowedResponses:
-            if "connect timeout" in result["body"]["errors"][0]["message"]:
-                success = True
-
-        return success
+        return (
+            result['status_code'] in AllowedResponses
+            and "connect timeout" in result["body"]["errors"][0]["message"]
+        )
 
     def timeout_legacy_auth(self):
         falconLegacyFail = FalconAuth(creds={
             'client_id': auth.config["falcon_client_id"],
             'client_secret': auth.config["falcon_client_secret"]
         }, timeout=.001)
-        success = False
         result = falconLegacyFail.token()
-        if result["status_code"] in AllowedResponses:
-            if "connect timeout" in result["body"]["errors"][0]["message"]:
-                success = True
-
-        return success
+        return (
+            result["status_code"] in AllowedResponses
+            and "connect timeout" in result["body"]["errors"][0]["message"]
+        )
 
     def test_NoTimeout(self):
         assert self.timeout_test() is True

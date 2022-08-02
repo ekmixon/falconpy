@@ -31,16 +31,17 @@ class TestAuthorization():
     def getConfigExtended(self):
         if "FALCONPY_DEBUG_TOKEN" in os.environ:
             self.token = os.getenv("FALCONPY_DEBUG_TOKEN")
-            self.config = {}
-            self.config["falcon_client_id"] = os.environ["FALCONPY_DEBUG_CLIENT_ID"]
-            self.config["falcon_client_secret"] = os.environ["FALCONPY_DEBUG_CLIENT_SECRET"]
+            self.config = {
+                "falcon_client_id": os.environ["FALCONPY_DEBUG_CLIENT_ID"],
+                "falcon_client_secret": os.environ["FALCONPY_DEBUG_CLIENT_SECRET"],
+            }
+
             if "DEBUG_API_BASE_URL" in os.environ:
                 self.config["falcon_base_url"] = os.getenv("DEBUG_API_BASE_URL")
             else:
                 self.config["falcon_base_url"] = "https://api.crowdstrike.com"
         else:
-            status = self.getConfig()
-            if status:
+            if status := self.getConfig():
                 os.environ["FALCONPY_DEBUG_CLIENT_ID"] = self.config["falcon_client_id"]
                 os.environ["FALCONPY_DEBUG_CLIENT_SECRET"] = self.config["falcon_client_secret"]
                 self.authorization = FalconAuth.OAuth2(creds={
@@ -53,7 +54,7 @@ class TestAuthorization():
                 os.environ["FALCONPY_DEBUG_TOKEN"] = self.token
             except KeyError:
                 self.token = False
-        
+
         return self.token
 
     def clear_env_token(self):
@@ -73,29 +74,23 @@ class TestAuthorization():
                 self.config["falcon_base_url"] = os.getenv("DEBUG_API_BASE_URL")
             else:
                 self.config["falcon_base_url"] = "https://api.crowdstrike.com"
-            return True
         else:
             cur_path = os.path.dirname(os.path.abspath(__file__))
-            if os.path.exists('%s/test.config' % cur_path):
-                with open('%s/test.config' % cur_path, 'r') as file_config:
-                    self.config = json.loads(file_config.read())
-                return True
-            else:
+            if not os.path.exists(f'{cur_path}/test.config'):
                 return False
+            with open(f'{cur_path}/test.config', 'r') as file_config:
+                self.config = json.loads(file_config.read())
+        return True
 
     def uberAuth(self):
-        status = self.getConfig()
-        if status:
+        if status := self.getConfig():
             self.falcon = FalconSDK.APIHarness(creds={
                     "client_id": self.config["falcon_client_id"],
                     "client_secret": self.config["falcon_client_secret"]
                 }
             )
             self.falcon.authenticate()
-            if self.falcon.authenticated:
-                return True
-            else:
-                return False
+            return bool(self.falcon.authenticated)
         else:
             return False
 
@@ -103,38 +98,31 @@ class TestAuthorization():
         return self.falcon.deauthenticate()
 
     def serviceAuth(self):
-        status = self.getConfig()
-        if status:
-            self.authorization = FalconAuth.OAuth2(creds={
-                'client_id': self.config["falcon_client_id"],
-                'client_secret': self.config["falcon_client_secret"]
-            })
-
-            try:
-                self.token = self.authorization.token()['body']['access_token']
-            except KeyError:
-                self.token = False
-
-            if self.token:
-                return True
-            else:
-                return False
-        else:
+        if not (status := self.getConfig()):
             return False
+        self.authorization = FalconAuth.OAuth2(creds={
+            'client_id': self.config["falcon_client_id"],
+            'client_secret': self.config["falcon_client_secret"]
+        })
+
+        try:
+            self.token = self.authorization.token()['body']['access_token']
+        except KeyError:
+            self.token = False
+
+        return self.token
 
     def serviceAuthNoSSL(self):
-        status = self.getConfig()
-        if status:
-            self.authorization = FalconHosts.Hosts(creds={
-                'client_id': self.config["falcon_client_id"],
-                'client_secret': self.config["falcon_client_secret"]
-            }, ssl_verify=False)
+        if not (status := self.getConfig()):
+            return False
+        self.authorization = FalconHosts.Hosts(creds={
+            'client_id': self.config["falcon_client_id"],
+            'client_secret': self.config["falcon_client_secret"]
+        }, ssl_verify=False)
 
-            if self.authorization.token:
-                self.authorization.auth_object.revoke(self.authorization.token)
-                return True
-            else:
-                return False
+        if self.authorization.token:
+            self.authorization.auth_object.revoke(self.authorization.token)
+            return True
         else:
             return False
 
@@ -169,24 +157,21 @@ class TestAuthorization():
 
         self.authorization.revoke(self.token)
 
-        if self.token:
-            return False
-        else:
-            return True
+        return not self.token
 
     def serviceRevoke(self):
         try:
             result = self.authorization.revoke(token=self.token)["status_code"]
-            if result > 0:
-                return True
-            else:
-                return False
+            return result > 0
         except KeyError:
             return False
 
     def credential_logout(self, api: object = None):
         if api:
-            return bool(api.auth_object.revoke(api.auth_object.token()["body"]["access_token"])["status_code"] in [200, 201])
+            return api.auth_object.revoke(
+                api.auth_object.token()["body"]["access_token"]
+            )["status_code"] in [200, 201]
+
         else:
             return False
 

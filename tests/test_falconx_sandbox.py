@@ -26,7 +26,6 @@ class TestFalconXSandbox:
         """
         Executes every statement in every method of the class, accepts all errors except 500
         """
-        error_checks = True
         tests = {
             "get_artifacts": falcon.GetArtifacts(parameters={})["status_code"],
             "get_summary_reports": falcon.GetSummaryReports(ids='12345678')["status_code"],
@@ -41,30 +40,33 @@ class TestFalconXSandbox:
             "delete_sample": falcon.DeleteSampleV2(ids='12345678')["status_code"],
             "query_sample": falcon.QuerySampleV1({'sha256s': ['12345678']})["status_code"]
         }
-        for key in tests:
-            if tests[key] not in AllowedResponses:
-                error_checks = False
-
-            # print(f"{key} operation returned a {tests[key]} status code")
-
-        return error_checks
+        return all(value in AllowedResponses for value in tests.values())
 
     def test_query_reports(self):
         """Pytest harness hook"""
-        assert bool(falcon.QueryReports(parameters={"limit": 1})["status_code"] in AllowedResponses) is True
+        assert (
+            falcon.QueryReports(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     def test_query_submissions(self):
         """Pytest harness hook"""
-        assert bool(falcon.QuerySubmissions(parameters={"limit": 1})["status_code"] in AllowedResponses) is True
+        assert (
+            falcon.QuerySubmissions(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     @pytest.mark.skipif(falcon.QueryReports(parameters={"limit": 1})["status_code"] == 429, reason="API rate limit reached")
     def test_get_summary_reports(self):
         """Pytest harness hook"""
-        assert bool(falcon.GetSummaryReports(
-                        ids=falcon.QueryReports(
-                            parameters={"limit": 1}
-                        )["body"]["resources"]
-                    )["status_code"] in AllowedResponses) is True
+        assert (
+            falcon.GetSummaryReports(
+                ids=falcon.QueryReports(parameters={"limit": 1})["body"][
+                    "resources"
+                ]
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def test_errors(self):
         """Pytest harness hook"""

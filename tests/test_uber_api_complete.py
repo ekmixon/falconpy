@@ -20,13 +20,12 @@ from falconpy._util import perform_request, force_default
 AllowedResponses = [200, 400, 415, 429, 500]
 
 if "DEBUG_API_ID" in os.environ and "DEBUG_API_SECRET" in os.environ:
-    config = {}
-    config["falcon_client_id"] = os.getenv("DEBUG_API_ID")
+    config = {"falcon_client_id": os.getenv("DEBUG_API_ID")}
     config["falcon_client_secret"] = os.getenv("DEBUG_API_SECRET")
 else:
     cur_path = os.path.dirname(os.path.abspath(__file__))
-    if os.path.exists('%s/test.config' % cur_path):
-        with open('%s/test.config' % cur_path, 'r') as file_config:
+    if os.path.exists(f'{cur_path}/test.config'):
+        with open(f'{cur_path}/test.config', 'r') as file_config:
             config = json.loads(file_config.read())
     else:
         sys.exit(1)
@@ -42,24 +41,24 @@ if not falcon.authenticated:
 
 class TestUber:
     def uberCCAWS_GetAWSSettings(self):
-        if falcon.command("GetAWSSettings")["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return falcon.command("GetAWSSettings")["status_code"] in AllowedResponses
 
     def uberCCAWS_QueryAWSAccounts(self):
-        if falcon.command("QueryAWSAccounts", parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.command("QueryAWSAccounts", parameters={"limit": 1})[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     def uberCCAWS_GetAWSAccounts(self):
         try:
             id_list = falcon.command("QueryAWSAccounts", parameters={"limit": 1})["body"]["resources"][0]["id"]
-            if falcon.command("GetAWSAccounts", ids=id_list)["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return (
+                falcon.command("GetAWSAccounts", ids=id_list)["status_code"]
+                in AllowedResponses
+            )
+
         except KeyError:
             pytest.skip("Workflow-related error, skipping")
             return True
@@ -67,10 +66,13 @@ class TestUber:
     def uberCCAWS_VerifyAWSAccountAccess(self):
         try:
             id_list = falcon.command("QueryAWSAccounts", parameters={"limit": 1})["body"]["resources"][0]["id"]
-            if falcon.command("VerifyAWSAccountAccess", ids=id_list)["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return (
+                falcon.command("VerifyAWSAccountAccess", ids=id_list)[
+                    "status_code"
+                ]
+                in AllowedResponses
+            )
+
         except KeyError:
             pytest.skip("Workflow-related error, skipping")
             return True
@@ -78,10 +80,12 @@ class TestUber:
     # Intentionally specifying this incorrectly to test the failure code path
     @force_default(defaults=["params"], default_types=[""])
     def uberCCAWS_QueryAWSAccountsForIDs(self, params: dict = None):
-        if falcon.command("QueryAWSAccountsForIDs", parameters=params)["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.command("QueryAWSAccountsForIDs", parameters=params)[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     def uberCCAWS_TestUploadDownload(self):
         FILENAME = "tests/testfile.png"
@@ -90,9 +94,9 @@ class TestUber:
         sdtdate = datetime.datetime.strptime(stddate, fmt)
         sdtdate = sdtdate.timetuple()
         jdate = sdtdate.tm_yday
-        jdate = "{}{}".format(stddate.replace("-", "").replace(":", "").replace(" ", ""), jdate)
-        SOURCE = "%s_source.png" % jdate
-        TARGET = "tests/%s_target.png" % jdate
+        jdate = f'{stddate.replace("-", "").replace(":", "").replace(" ", "")}{jdate}'
+        SOURCE = f"{jdate}_source.png"
+        TARGET = f"tests/{jdate}_target.png"
         PAYLOAD = open(FILENAME, 'rb').read()
         response = falcon.command('UploadSampleV3', file_name=SOURCE, data=PAYLOAD, content_type="application/octet-stream")
         try:
@@ -106,50 +110,53 @@ class TestUber:
             hash1 = hashlib.sha256()
             with open(FILENAME, 'rb') as f:
                 while True:
-                    data = f.read(buf)
-                    if not data:
+                    if data := f.read(buf):
+                        hash1.update(data)
+                    else:
                         break
-                    hash1.update(data)
             hash1 = hash1.hexdigest()
             hash2 = hashlib.sha256()
             with open(TARGET, 'rb') as f:
                 while True:
-                    data = f.read(buf)
-                    if not data:
+                    if data := f.read(buf):
+                        hash2.update(data)
+                    else:
                         break
-                    hash2.update(data)
             hash2 = hash2.hexdigest()
             if os.path.exists(TARGET):
                 os.remove(TARGET)
             response = falcon.command("DeleteSampleV3", ids=sha)
-            if hash1 == hash2:
-                return True
-            else:
-                return False
+            return hash1 == hash2
         except KeyError:
             # Flaky
             pytest.skip("Workflow-related error, skipping")
             return True
 
     def uberCCAWS_GenerateError(self):
-        if falcon.command("QueryAWSAccounts", partition=0)["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.command("QueryAWSAccounts", partition=0)["status_code"]
+            in AllowedResponses
+        )
 
     def uberCCAWS_GenerateInvalidPayload(self):
-        if falcon.command("refreshActiveStreamSession", partition=9,
-                          parameters={"action_name": "refresh_active_stream_session"})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.command(
+                "refreshActiveStreamSession",
+                partition=9,
+                parameters={"action_name": "refresh_active_stream_session"},
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def uberCCAWS_OverrideAndHeader(self):
-        if falcon.command(action="", override="GET,/cloud-connect-aws/combined/accounts/v1",
-                          headers={"Nothing": "Special"})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.command(
+                action="",
+                override="GET,/cloud-connect-aws/combined/accounts/v1",
+                headers={"Nothing": "Special"},
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def uberCCAWS_TestMSSP(self):
         falcon.creds["member_cid"] = "1234567890ABCDEFG"
@@ -161,40 +168,47 @@ class TestUber:
             return False
 
     def uberCCAWS_BadMethod(self):
-        if falcon.command(action="", override="BANANA,/cloud-connect-aws/combined/accounts/v1",
-                          headers={"Nothing": "Special"})["status_code"] == 405:
-            return True
-        else:
-            return False
+        return (
+            falcon.command(
+                action="",
+                override="BANANA,/cloud-connect-aws/combined/accounts/v1",
+                headers={"Nothing": "Special"},
+            )["status_code"]
+            == 405
+        )
 
     def uberCCAWS_BadCommand(self):
-        if falcon.command(action="IWantTheImpossible", parameters={"limit": 1})["status_code"] == 418:
-            return True
-        else:
-            return False
+        return (
+            falcon.command(action="IWantTheImpossible", parameters={"limit": 1})[
+                "status_code"
+            ]
+            == 418
+        )
 
     def uberCCAWS_GenerateServerError(self):
-        if falcon.command("GetAWSAccounts", ids="123", data=['Kerash!'])["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.command("GetAWSAccounts", ids="123", data=['Kerash!'])[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     @force_default(defaults=["params"])  # Intentionally specifying this incorrectly to test the failure code path
     def uberCCHosts_GenerateActionNameError(self, params: dict = None):
-        if falcon.command("PerformActionV2",
-                          parameters=params,
-                          body={},
-                          action_name="Squish"
-                          )["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.command(
+                "PerformActionV2", parameters=params, body={}, action_name="Squish"
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def uberCCAWS_GenerateInvalidOperationIDError(self):
-        if perform_request(method="FETCH", endpoint="/somewhere/interesting")["status_code"] == 405:
-            return True
-        else:
-            return False
+        return (
+            perform_request(method="FETCH", endpoint="/somewhere/interesting")[
+                "status_code"
+            ]
+            == 405
+        )
 
     # Token revocation is returning a 200 regardless of the token we send.
     # Changed to client ID on 08.02.21 - jshcodes@CrowdStrike
@@ -212,10 +226,12 @@ class TestUber:
 
     def uberCCAWS_BadAuthentication(self):
         falcon = FalconSDK.APIHarness()
-        if falcon.command("QueryAWSAccounts", parameters={"limit": 1})["status_code"] == 401:
-            return True
-        else:
-            return False
+        return (
+            falcon.command("QueryAWSAccounts", parameters={"limit": 1})[
+                "status_code"
+            ]
+            == 401
+        )
 
     def uberCCAWS_DisableSSLVerify(self):
         falcon = FalconSDK.APIHarness(
@@ -224,10 +240,12 @@ class TestUber:
                 "client_secret": config["falcon_client_secret"]
             }, ssl_verify=False
         )
-        if falcon.command("QueryAWSAccounts", parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.command("QueryAWSAccounts", parameters={"limit": 1})[
+                "status_code"
+            ]
+            in AllowedResponses
+        )
 
     def test_GetAWSSettings(self):
         assert self.uberCCAWS_GetAWSSettings() is True

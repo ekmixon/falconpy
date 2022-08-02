@@ -27,10 +27,11 @@ class TestFalconUserManagement:
         """
         try:
             id_list = falcon.RetrieveEmailsByCID()["body"]["resources"][0]
-            if falcon.RetrieveUserUUID(parameters={"uid": id_list})["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return (
+                falcon.RetrieveUserUUID(parameters={"uid": id_list})["status_code"]
+                in AllowedResponses
+            )
+
         except KeyError:
             pytest.skip("Workflow-related error, skipping")
             return True
@@ -41,10 +42,7 @@ class TestFalconUserManagement:
         """
         try:
             id_list = falcon.RetrieveUserUUIDsByCID()["body"]["resources"][0]
-            if falcon.RetrieveUser(ids=id_list)["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return falcon.RetrieveUser(ids=id_list)["status_code"] in AllowedResponses
         except KeyError:
             pytest.skip("Workflow-related error, skipping")
             return True
@@ -55,10 +53,13 @@ class TestFalconUserManagement:
         """
         try:
             id_list = falcon.RetrieveUserUUIDsByCID()["body"]["resources"][0]
-            if falcon.GetUserRoleIds(parameters={"user_uuid": id_list})["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return (
+                falcon.GetUserRoleIds(parameters={"user_uuid": id_list})[
+                    "status_code"
+                ]
+                in AllowedResponses
+            )
+
         except KeyError:
             pytest.skip("Workflow-related error, skipping")
             return True
@@ -69,10 +70,7 @@ class TestFalconUserManagement:
         """
         try:
             id_list = falcon.GetAvailableRoleIds()["body"]["resources"][0]
-            if falcon.GetRoles(ids=id_list)["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return falcon.GetRoles(ids=id_list)["status_code"] in AllowedResponses
         except KeyError:
             pytest.skip("Workflow-related error, skipping")
             return True
@@ -82,7 +80,6 @@ class TestFalconUserManagement:
         Test every code path within every method by generating 500s, does not hit the API
         """
         falcon.base_url = "nowhere"
-        error_checks = True
         tests = {
             "get_roles": falcon.GetRoles(ids='12345678')["status_code"],
             "grant_user_role_ids": falcon.GrantUserRoleIds(body={}, parameters={})["status_code"],
@@ -97,25 +94,19 @@ class TestFalconUserManagement:
             "retrieve_user_uuids_by_cid": falcon.RetrieveUserUUIDsByCID()["status_code"],
             "retrieve_user_uuid": falcon.RetrieveUserUUID(parameters={})["status_code"]
         }
-        for key in tests:
-            if tests[key] != 500:
-                error_checks = False
-
-            # print(f"{key} processed with a {tests[key]} response")
-
-        return error_checks
+        return all(value == 500 for value in tests.values())
 
     def test_retrieve_emails_by_cid(self):
         """
         Pytest harness hook
         """
-        assert bool(falcon.RetrieveEmailsByCID()["status_code"] in AllowedResponses) is True
+        assert falcon.RetrieveEmailsByCID()["status_code"] in AllowedResponses
 
     def test_retrieve_user_uuids_by_cid(self):
         """
         Pytest harness hook
         """
-        assert bool(falcon.RetrieveUserUUIDsByCID()["status_code"] in AllowedResponses) is True
+        assert falcon.RetrieveUserUUIDsByCID()["status_code"] in AllowedResponses
 
     @pytest.mark.skipif(falcon.RetrieveEmailsByCID()["status_code"] == 429, reason="API rate limit reached")
     def test_retrieve_user_uuid(self):
@@ -142,7 +133,7 @@ class TestFalconUserManagement:
         """
         Pytest harness hook
         """
-        assert bool(falcon.GetAvailableRoleIds()["status_code"] in AllowedResponses) is True
+        assert falcon.GetAvailableRoleIds()["status_code"] in AllowedResponses
 
     @pytest.mark.skipif(falcon.GetAvailableRoleIds()["status_code"] == 429, reason="API rate limit reached")
     def test_get_roles(self):

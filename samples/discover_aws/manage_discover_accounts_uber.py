@@ -22,8 +22,7 @@ from falconpy import api_complete as FalconSDK
 
 # =================== FORMAT API PAYLOAD
 def format_api_payload(rate_limit_reqs=0, rate_limit_time=0):
-    # Generates a properly formatted JSON payload for POST and PATCH requests
-    data = {
+    return {
         "resources": [
             {
                 "cloudtrail_bucket_owner_id": cloudtrail_bucket_owner_id,
@@ -32,11 +31,10 @@ def format_api_payload(rate_limit_reqs=0, rate_limit_time=0):
                 "iam_role_arn": iam_role_arn,
                 "id": local_account,
                 "rate_limit_reqs": rate_limit_reqs,
-                "rate_limit_time": rate_limit_time
+                "rate_limit_time": rate_limit_time,
             }
         ]
     }
-    return data
 
 
 # =============== ACCOUNT VALUE
@@ -52,22 +50,20 @@ def account_value(id, val, accts):
 # =================== CHECK ACCOUNTS
 def check_account():
     # Retrieve the account list
-    account_list = falcon.command(action="QueryAWSAccounts",
-                                  parameters={"limit": "{}".format(str(query_limit))}
-                                  )["body"]["resources"]
+    account_list = falcon.command(
+        action="QueryAWSAccounts", parameters={"limit": f"{str(query_limit)}"}
+    )["body"]["resources"]
+
     # Log the results of the account query to a file if logging is enabled
     if log_enabled:
         with open('falcon-discover-accounts.json', 'w+') as f:
             json.dump(account_list, f)
     # Create a list of our account IDs out of account_list
-    id_items = []
-    for z in account_list:
-        id_items.append(z["id"])
-
+    id_items = [z["id"] for z in account_list]
     q_max = 10    # VerifyAWSAccountAccess has a ID max count of 10
     for index in range(0, len(id_items), q_max):
         sub_acct_list = id_items[index:index + q_max]
-        temp_list = ",".join([a for a in sub_acct_list])
+        temp_list = ",".join(list(sub_acct_list))
         # Check our AWS account access against the list of accounts returned in our query
         access_response = falcon.command(action="VerifyAWSAccountAccess", ids=temp_list)
         if access_response['status_code'] == 200:
@@ -100,9 +96,11 @@ def check_account():
                         # check immediately after registering an account as
                         # the access_health branch hasn't been populated yet.
                         # Requery the API for the account_list when this happens.
-                        account_list = falcon.command(action="QueryAWSAccounts",
-                                                      parameters={"limit": "{}".format(str(query_limit))}
-                                                      )["body"]["resources"]
+                        account_list = falcon.command(
+                            action="QueryAWSAccounts",
+                            parameters={"limit": f"{str(query_limit)}"},
+                        )["body"]["resources"]
+
                         print('Account {} has a problem: {}'.format(result["id"],
                                                                     account_value(result["id"],
                                                                                   "access_health",
@@ -114,12 +112,16 @@ def check_account():
         else:
             try:
                 # An error has occurred
-                print("Got response error code {} message {}".format(access_response["status_code"],
-                                                                     access_response["body"]["errors"][0]["message"]
-                                                                     ))
+                print(
+                    f'Got response error code {access_response["status_code"]} message {access_response["body"]["errors"][0]["message"]}'
+                )
+
             except Exception:
                 # Handle any egregious errors that break our return error payload
-                print("Got response error code {} message {}".format(access_response["status_code"], access_response["body"]))
+                print(
+                    f'Got response error code {access_response["status_code"]} message {access_response["body"]}'
+                )
+
 
     return
 
@@ -131,9 +133,10 @@ def register_account():
     if register_response["status_code"] == 201:
         print("Successfully registered account.")
     else:
-        print("Registration failed with response: {} {}".format(register_response["status_code"],
-                                                                register_response["body"]["errors"][0]["message"]
-                                                                ))
+        print(
+            f'Registration failed with response: {register_response["status_code"]} {register_response["body"]["errors"][0]["message"]}'
+        )
+
 
     return
 
@@ -145,9 +148,10 @@ def update_account():
     if update_response["status_code"] == 200:
         print("Successfully updated account.")
     else:
-        print("Update failed with response: {} {}".format(update_response["status_code"],
-                                                          update_response["body"]["errors"][0]["message"]
-                                                          ))
+        print(
+            f'Update failed with response: {update_response["status_code"]} {update_response["body"]["errors"][0]["message"]}'
+        )
+
 
     return
 
@@ -159,9 +163,10 @@ def delete_account():
     if delete_response["status_code"] == 200:
         print("Successfully deleted account.")
     else:
-        print("Delete failed with response: {} {}".format(delete_response["status_code"],
-                                                          delete_response["body"]["errors"][0]["message"]
-                                                          ))
+        print(
+            f'Delete failed with response: {delete_response["status_code"]} {delete_response["body"]["errors"][0]["message"]}'
+        )
+
 
     return
 
@@ -199,7 +204,10 @@ if command.lower() in "check,update,register,delete":
                 args.local_account is None or
                 args.external_id is None or
                 args.iam_role_arn is None):
-            parser.error("The {} command requires the -r, -o, -a, -e, -i arguments to also be specified.".format(command))
+            parser.error(
+                f"The {command} command requires the -r, -o, -a, -e, -i arguments to also be specified."
+            )
+
         else:
             cloudtrail_bucket_region = args.cloudtrail_bucket_region
             cloudtrail_bucket_owner_id = args.cloudtrail_bucket_owner_id
@@ -209,20 +217,19 @@ if command.lower() in "check,update,register,delete":
     elif command.lower() in "delete":
         # Delete only requires the local account ID
         if args.local_account is None:
-            parser.error("The {} command requires the -l argument to also be specified.".format(command))
+            parser.error(
+                f"The {command} command requires the -l argument to also be specified."
+            )
+
         else:
             local_account = args.local_account
 else:
-    parser.error("The {} command is not recognized.".format(command))
+    parser.error(f"The {command} command is not recognized.")
 # These globals exist for all requests
 falcon_client_id = args.falcon_client_id
 falcon_client_secret = args.falcon_client_secret
 log_enabled = args.log_enabled
-if args.query_limit is None:
-    query_limit = 100
-else:
-    query_limit = args.query_limit
-
+query_limit = 100 if args.query_limit is None else args.query_limit
 # =================== MAIN ROUTINE
 # Connect to the API using our provided falcon client_id and client_secret
 try:
@@ -244,7 +251,7 @@ if falcon.authenticate():
             check_account()
     except Exception as e:
         # Handle any previously unhandled errors
-        print("Command failed with error: {}.".format(str(e)))
+        print(f"Command failed with error: {str(e)}.")
     # Discard our token before we exit
     falcon.deauthenticate()
 else:

@@ -27,28 +27,28 @@ AllowedResponses = [200, 429]  # Adding rate-limiting as an allowed response for
 class TestRTR:
 
     def serviceRTR_ListAllSessions(self):
-        if falcon.RTR_ListAllSessions(parameters={"limit":1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.RTR_ListAllSessions(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     def serviceRTR_SessionTester(self):
         returned = False
         # This will have to be periodically updated using this solution, but for now it provides the necessary code coverage.
         # Highly dependant upon my test CID / API keys
         aid_lookup = falcon_hosts.QueryDevicesByFilter(filter="hostname:'ip-172-31-30-80*'")
-        aid_to_check = aid_lookup["body"]["resources"][0]
-        if aid_to_check:
+        if aid_to_check := aid_lookup["body"]["resources"][0]:
             result = falcon.RTR_InitSession(body={"device_id": aid_to_check})
             if "resources" in result["body"]:
                 session_id = result["body"]["resources"][0]["session_id"]
-                if falcon.RTR_DeleteSession(session_id=session_id)["status_code"] == 204:
-                    returned = True
-                else:
-                    returned = False
+                returned = (
+                    falcon.RTR_DeleteSession(session_id=session_id)["status_code"]
+                    == 204
+                )
+
             else:
                 pytest.skip("API communication failure")
-                
+
         return returned
 
     def serviceRTR_GenerateErrors(self):
@@ -78,7 +78,7 @@ class TestRTR:
             ["RTR_ListAllSessions",""]
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

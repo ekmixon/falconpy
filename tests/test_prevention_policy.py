@@ -19,32 +19,34 @@ AllowedResponses = [200, 201, 400, 404, 429, 500]  # Allowing 500 for now due to
 
 class TestFalconPrevent:
     def servicePrevent_queryPreventionPolicies(self):
-        if falcon.queryPreventionPolicies(limit=1)["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryPreventionPolicies(limit=1)["status_code"]
+            in AllowedResponses
+        )
 
     def servicePrevent_queryPreventionPolicyMembers(self):
         policies = falcon.queryPreventionPolicies(limit=1)
         if policies["status_code"] != 500:
-            if falcon.queryPreventionPolicyMembers(
+            return (
+                falcon.queryPreventionPolicyMembers(
                     parameters={"id": policies["body"]["resources"][0]}
-                    )["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+                )["status_code"]
+                in AllowedResponses
+            )
+
         else:
             return True  # Can't hit the API for some reason
 
     def servicePrevent_getPreventionPolicies(self):
         policies = falcon.queryPreventionPolicies(parameters={"limit": 1})
         if policies["status_code"] != 500:
-            if falcon.getPreventionPolicies(
-                    ids=policies["body"]["resources"][0]
-                    )["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+            return (
+                falcon.getPreventionPolicies(ids=policies["body"]["resources"][0])[
+                    "status_code"
+                ]
+                in AllowedResponses
+            )
+
         else:
             return True  # Can't hit the API
 
@@ -59,12 +61,13 @@ class TestFalconPrevent:
     def servicePrevent_queryCombinedPreventionPolicyMembers(self):
         policies = falcon.queryCombinedPreventionPolicies(parameters={"limit": 1})
         if policies["status_code"] != 500:
-            if falcon.queryCombinedPreventionPolicyMembers(
+            return (
+                falcon.queryCombinedPreventionPolicyMembers(
                     parameters={"id": policies["body"]["resources"][0]["id"]}
-                    )["status_code"] in AllowedResponses:
-                return True
-            else:
-                return False
+                )["status_code"]
+                in AllowedResponses
+            )
+
         else:
             return True  # Can't hit the API
 
@@ -85,7 +88,7 @@ class TestFalconPrevent:
             ["queryPreventionPolicies", ""]
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

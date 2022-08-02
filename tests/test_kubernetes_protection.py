@@ -31,7 +31,7 @@ class TestKubeProtect:
             ["TriggerScan", "scan_type='dry-run'"],  # 403
         ]
         for cmd in commandList:
-            result = eval("falcon.{}({})".format(cmd[0], cmd[1]))
+            result = eval(f"falcon.{cmd[0]}({cmd[1]})")
             if result['status_code'] not in AllowedResponses:
                 errorChecks = False
 

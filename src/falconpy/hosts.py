@@ -60,55 +60,55 @@ class Hosts(ServiceClass):
         operation_id = "PerformActionV2"
         parameter_payload = args_to_params(parameters, kwargs, Endpoints, operation_id)
         action_name = parameter_payload.get("action_name", "Not Specified")
-        # Only process allowed actions
-        if action_name.lower() in _allowed_actions:
-            returned = process_service_request(
+        return (
+            process_service_request(
                 calling_object=self,
                 endpoints=Endpoints,
                 operation_id=operation_id,
                 body=body,
                 keywords=kwargs,
-                params=parameters
-                )
-        else:
-            returned = generate_error_result("Invalid value specified for action_name parameter.")
-
-        return returned
+                params=parameters,
+            )
+            if action_name.lower() in _allowed_actions
+            else generate_error_result(
+                "Invalid value specified for action_name parameter."
+            )
+        )
 
     def update_device_tags(self: object, action_name: str, ids: list or str, tags: list or str) -> dict:
         """
         Allows for tagging hosts. If the tags are empty
         """
         _allowed_actions = ["add", "remove"]
-        # validate action is allowed AND tags is "something"
-        if action_name.lower() in _allowed_actions and tags is not None:
-            # convert ids/tags to be a list object if not already
-            if isinstance(ids, str):
-                ids = ids.split(",")
-            if isinstance(tags, str):
-                tags = tags.split(",")
-            # tags must start with FalconGroupingTags, users probably won't know this so add it for them
-            patch_tag = []
-            for tag in tags:
-                if tag.startswith("FalconGroupingTags/"):
-                    patch_tag.append(tag)
-                else:
-                    tag_name = "FalconGroupingTags/" + tag
-                    patch_tag.append(tag_name)
-            body_payload = {
-                "action": action_name,
-                "device_ids": ids,
-                "tags": patch_tag
-            }
-            returned = process_service_request(
-                calling_object=self,
-                endpoints=Endpoints,
-                operation_id="UpdateDeviceTags",
-                body=body_payload,
-                )
-        else:
-            returned = generate_error_result("Invalid value specified for action_name parameter.")
-        return returned
+        if action_name.lower() not in _allowed_actions or tags is None:
+            return generate_error_result(
+                "Invalid value specified for action_name parameter."
+            )
+
+        # convert ids/tags to be a list object if not already
+        if isinstance(ids, str):
+            ids = ids.split(",")
+        if isinstance(tags, str):
+            tags = tags.split(",")
+        # tags must start with FalconGroupingTags, users probably won't know this so add it for them
+        patch_tag = []
+        for tag in tags:
+            if tag.startswith("FalconGroupingTags/"):
+                patch_tag.append(tag)
+            else:
+                tag_name = f"FalconGroupingTags/{tag}"
+                patch_tag.append(tag_name)
+        body_payload = {
+            "action": action_name,
+            "device_ids": ids,
+            "tags": patch_tag
+        }
+        return process_service_request(
+            calling_object=self,
+            endpoints=Endpoints,
+            operation_id="UpdateDeviceTags",
+            body=body_payload,
+        )
 
     @force_default(defaults=["parameters"], default_types=["dict"])
     def get_device_details(self: object, *args, parameters: dict = None, **kwargs) -> dict:

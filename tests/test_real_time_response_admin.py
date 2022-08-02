@@ -32,9 +32,8 @@ class TestRTRAdmin:
         found_id = "1234567890"  # Force an error if we can't find it
         script = falcon.get_scripts(ids=falcon.list_scripts()["body"]["resources"])
         for file in script["body"]["resources"]:
-            if "name" in file:
-                if file["name"] == script_name:
-                    found_id = file["id"]
+            if "name" in file and file["name"] == script_name:
+                found_id = file["id"]
 
         return found_id
 
@@ -46,9 +45,8 @@ class TestRTRAdmin:
         found_id = "1234567890"  # Force an error if we can't find it
         file = falcon.get_put_files(ids=falcon.list_put_files()["body"]["resources"])
         for item in file["body"]["resources"]:
-            if "name" in item:
-                if item["name"] == file_name:
-                    found_id = item["id"]
+            if "name" in item and item["name"] == file_name:
+                found_id = item["id"]
 
         return found_id
 
@@ -66,9 +64,9 @@ class TestRTRAdmin:
         sdtdate = datetime.datetime.strptime(stddate, fmt)
         sdtdate = sdtdate.timetuple()
         jdate = sdtdate.tm_yday
-        jdate = "{}{}".format(stddate.replace("-", "").replace(":", "").replace(" ", ""), jdate)
-        upload_filename = "%s_testfile.png" % jdate
-        script_filename = "%s_testscript" % jdate
+        jdate = f'{stddate.replace("-", "").replace(":", "").replace(" ", "")}{jdate}'
+        upload_filename = f"{jdate}_testfile.png"
+        script_filename = f"{jdate}_testscript"
 
         file_payload = {'name': upload_filename, 'description': 'FalconPy Unit Testing'}
         files_detail = [
@@ -83,7 +81,6 @@ class TestRTRAdmin:
         new_script_payload = json.loads(json.dumps(script_payload))
         new_script_payload["content"] = 'Write-Output "This is an updated processing script."'
         script_detail = [('file', (f"{script_filename}", 'application/script'))]
-        error_checks = True
         tests = {
             "batch_admin_cmd": falcon.BatchAdminCmd(body={})["status_code"],                                    # 400
             "check_admin_command_status": falcon.RTR_CheckAdminCommandStatus(parameters={})["status_code"],     # 400
@@ -100,11 +97,7 @@ class TestRTRAdmin:
             "list_put_files": falcon.RTR_ListPut_Files()["status_code"],
             "list_scripts": falcon.RTR_ListScripts()["status_code"]
         }
-        for key in tests:
-            if tests[key] not in AllowedResponses:
-                error_checks = False
-
-            # print(f"{key} processed with a {tests[key]} response")
+        error_checks = all(value in AllowedResponses for value in tests.values())
         # Code paths still get tested, skip the test on a 500
         if not error_checks:
             pytest.skip("500 error generated, code paths still tested")

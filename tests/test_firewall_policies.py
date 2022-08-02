@@ -18,10 +18,10 @@ AllowedResponses = [200, 429]  # Adding rate-limiting as an allowed response for
 class TestFirewallPolicy:
 
     def serviceFirewall_queryFirewallPolicies(self):
-        if falcon.queryFirewallPolicies(parameters={"limit": 1})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return (
+            falcon.queryFirewallPolicies(parameters={"limit": 1})["status_code"]
+            in AllowedResponses
+        )
 
     def serviceFirewall_GenerateErrors(self):
         falcon.base_url = "nowhere"
@@ -41,7 +41,7 @@ class TestFirewallPolicy:
             ["queryFirewallPolicies", ""]
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0], cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
 
         return errorChecks

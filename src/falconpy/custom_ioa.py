@@ -163,8 +163,7 @@ class CustomIOA(ServiceClass):
         Get rules by ID and optionally version in the following format: ID[:version]
         """
         # [POST] https://assets.falcon.crowdstrike.com/support/api/swagger.html#/custom-ioa/get-rules-get
-        body_payload = {}
-        body_payload["ids"] = parse_id_list(ids).split(",")
+        body_payload = {"ids": parse_id_list(ids).split(",")}
         return process_service_request(
             calling_object=self,
             endpoints=Endpoints,

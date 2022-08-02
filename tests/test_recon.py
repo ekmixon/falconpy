@@ -45,7 +45,7 @@ class TestRecon:
             # result = globals()[f"falcon.{cmd[0]}"]()
             # result = getattr(falcon, f"{cmd[0]}")(f"{cmd[1]}")
 
-            result = eval("falcon.{}({})".format(cmd[0], cmd[1]))
+            result = eval(f"falcon.{cmd[0]}({cmd[1]})")
             if result['status_code'] not in AllowedResponses:
                 errorChecks = False
 

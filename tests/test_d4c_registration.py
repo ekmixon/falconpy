@@ -24,68 +24,55 @@ class TestD4CRegistration:
         """
         get_azure_user_scripts_attachment
         """
-        returned = False
         result = falcon.GetCSPMAzureUserScriptsAttachment()
-        if isinstance(result, (bytes)):
-            returned = True
-        else:
-            if "status_code" in result:
-                if result["status_code"] in AllowedResponses:
-                    returned = True
-
-        return returned
+        return (
+            not isinstance(result, (bytes))
+            and "status_code" in result
+            and result["status_code"] in AllowedResponses
+            or isinstance(result, (bytes))
+        )
 
     def d4c_get_azure_user_scripts(self):
         """
         get_azure_user_scripts
         """
-        returned = False
         result = falcon.GetCSPMAzureUserScripts()
-        if isinstance(result, (bytes)):
-            returned = True
-        else:
-            if "status_code" in result:
-                if result["status_code"] in AllowedResponses:
-                    returned = True
-
-        return returned
+        return (
+            not isinstance(result, (bytes))
+            and "status_code" in result
+            and result["status_code"] in AllowedResponses
+            or isinstance(result, (bytes))
+        )
 
     def d4c_get_gcp_user_scripts_attachment(self):
         """
         get_gcp_user_scripts_attachment
         """
-        returned = False
         result = falcon.GetCSPMGCPUserScriptsAttachment()
-        if isinstance(result, (bytes)):
-            returned = True
-        else:
-            if "status_code" in result:
-                if result["status_code"] in AllowedResponses:
-                    returned = True
-
-        return returned
+        return (
+            not isinstance(result, (bytes))
+            and "status_code" in result
+            and result["status_code"] in AllowedResponses
+            or isinstance(result, (bytes))
+        )
 
     def d4c_get_gcp_user_scripts(self):
         """
         get_gcp_user_scripts
         """
-        returned = False
         result = falcon.GetCSPMGCPUserScripts()
-        if isinstance(result, (bytes)):
-            returned = True
-        else:
-            if "status_code" in result:
-                if result["status_code"] in AllowedResponses:
-                    returned = True
-
-        return returned
+        return (
+            not isinstance(result, (bytes))
+            and "status_code" in result
+            and result["status_code"] in AllowedResponses
+            or isinstance(result, (bytes))
+        )
 
     def d4c_generate_errors(self):
         """
         Test every code path within every method by generating 500s, does not hit the API
         """
         falcon.base_url = "nowhere"
-        error_checks = True
         tests = {
             "get_azure_account": falcon.GetCSPMAzureAccount(ids='12345678', scan_type='dry')["status_code"],
             "update_azure_account_client_id": falcon.UpdateCSPMAzureAccountClientID(ids='12345678')["status_code"],
@@ -94,13 +81,7 @@ class TestD4CRegistration:
             "create_gcp_account": falcon.CreateCSPMGCPAccount(body={})["status_code"],
             "create_azure_account": falcon.CreateCSPMAzureAccount(body={})["status_code"]
         }
-        for key in tests:
-            if tests[key] != 500:
-                error_checks = False
-
-            # print(f"{key} processed with a {tests[key]} response")
-
-        return error_checks
+        return all(value == 500 for value in tests.values())
 
     def test_GetCSPMAzureUserScriptsAttachment(self):
         """

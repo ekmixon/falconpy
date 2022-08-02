@@ -19,18 +19,22 @@ AllowedResponses = [200, 429]
 
 class TestIOCs:
     def serviceIOCs_QueryIOCs(self):
-        if falcon.QueryIOCs()["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+        return falcon.QueryIOCs()["status_code"] in AllowedResponses
 
     
     def serviceIOCs_GetIOC(self):
-        
-        if falcon.GetIOC(parameters={"type":"ipv4", "value":falcon.QueryIOCs(parameters={"types":"ipv4"})["body"]["resources"][0]})["status_code"] in AllowedResponses:
-            return True
-        else:
-            return False
+
+        return (
+            falcon.GetIOC(
+                parameters={
+                    "type": "ipv4",
+                    "value": falcon.QueryIOCs(parameters={"types": "ipv4"})[
+                        "body"
+                    ]["resources"][0],
+                }
+            )["status_code"]
+            in AllowedResponses
+        )
 
     def serviceIOCs_GenerateErrors(self):
         falcon.base_url = "nowhere"
@@ -47,9 +51,9 @@ class TestIOCs:
             ["entities_processes","ids='12345678'"]
         ]
         for cmd in commandList:
-            if eval("falcon.{}({})['status_code']".format(cmd[0],cmd[1])) != 500:
+            if eval(f"falcon.{cmd[0]}({cmd[1]})['status_code']") != 500:
                 errorChecks = False
-        
+
         return errorChecks
 
     def test_QueryIOCs(self):
